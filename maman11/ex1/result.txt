@@ -1,0 +1,13 @@
+Enetr a string to find is sequence, 
+Press enter key after evrey string, 
+to end EOF (ctrl + d)
+
+The stirng "demo"       is - REAL UP OREDER
+The stirng "beef"       is - UP OREDER
+The stirng "tonic"      is - REAL DOWN OREDER
+The stirng "spoon"      is - DOWN OREDER
+The stirng "suddenly"   is - NOT CONST OREDER
+The stirng "aaa"        is - UP OREDER
+The stirng "54321"      is - REAL DOWN OREDER
+The stirng "12345"      is - REAL UP OREDER
+The stirng "!@#$%^"     is - NOT CONST OREDER
