@@ -14,11 +14,42 @@ enum ERROR {
 	MULTI_COMMA,
 	MIS_COMMA,
 	ILLEGAL_COMMA,
-	UNDEF_ERROR,
+	UNDEF_ERROR
 
 };
 
-static int printErr(int err)
+/*****************************************************/
+/*****************************************************/
+/*forward declaration*/
+
+static void printErr(int err);
+
+/*****************************************************/
+/*****************************************************/
+
+int main(int argc, char const *argv[])
+{
+	char cmd[MAX_LEN];
+	char Token_1[MAX_LEN];
+	char Token_2[MAX_LEN];
+	char Token_3[MAX_LEN];
+
+
+	complex a;
+	a.img = 34.2333;
+	a.real = 22.22222;
+
+	print_comp(a);
+
+	printErr(UNDEF_COMP);
+	return 0;
+}
+
+
+/*****************************************************/
+/*****************************************************/
+
+static void printErr(int err)
 {
 	printf(RED);
 
@@ -56,33 +87,11 @@ static int printErr(int err)
 		printf("Missing comma\n");
 		break;
 
+
 	default:
+		printf("Error - Unknow erorr\n");
 		break;
 	}
+	
 	printf(RESET);
-}
-/*****************************************************/
-/*****************************************************/
-/*forward declaration*/
-static int printErr(int err);
-
-/*****************************************************/
-/*****************************************************/
-
-int main(int argc, char const *argv[])
-{
-	char cmd[MAX_LEN];
-	char Token_1[MAX_LEN];
-	char Token_2[MAX_LEN];
-	char Token_3[MAX_LEN];
-
-
-	complex a;
-	a.img = 34.2333;
-	a.real = 22.22222;
-
-	print_comp(a);
-
-	/* code */
-	return 0;
 }
