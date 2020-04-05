@@ -4,6 +4,8 @@
 #include "complex.h"
 
 #define MAX_LEN 256
+#define	true	1
+#define false	0
 
 enum ERROR {
 	UNDEF_COMP,
@@ -18,12 +20,67 @@ enum ERROR {
 
 };
 
+enum CMD {
+	READ_COMP,
+	PRINT_COMP,
+	ADD_COMP,
+	SUB_COMP,
+	MULT_COMP_REAL,
+	MULT_COMP_IMG,
+	MULT_COMP_COMP,
+	ABS_COMP,
+	STOP
+};
+
+
 /*****************************************************/
 /*****************************************************/
 /*forward declaration*/
 
 static void printErr(int err);
 
+static int findComma(char * str)
+{
+	while (*str != ' ' || *str != '\t')
+	{
+		str++;
+	}
+	if (*str == ',')
+		return true;
+	
+	return false;
+}
+
+static int checkCmd(char *str)
+{
+	strcmp("read_comp",str);
+	strcmp("print_comp",str);
+	strcmp("add_comp",str);
+	strcmp("sub_comp",str);
+	strcmp("mult_comp_real",str);
+	strcmp("mult_comp_img",str);
+	strcmp("mult_comp_comp",str);
+	strcmp("abs_comp",str);
+	strcmp("stop",str);
+
+}
+
+static void readCmd()
+{
+	char *pTocken;
+	char cmd[MAX_LEN];
+	char Token_1[MAX_LEN];
+	char Token_2[MAX_LEN];
+	char Token_3[MAX_LEN];
+
+	printf("Enter command\n");
+	fgets(cmd,MAX_LEN,stdin);
+	pTocken = strtok(cmd,", \t,");
+	pTocken = strtok(NULL," \t,");
+	pTocken = strtok(NULL,", \t,");
+
+	
+}
 /*****************************************************/
 /*****************************************************/
 
@@ -34,7 +91,7 @@ int main(int argc, char const *argv[])
 	char Token_2[MAX_LEN];
 	char Token_3[MAX_LEN];
 
-
+	readCmd();
 	complex a;
 	a.img = 34.2333;
 	a.real = 22.22222;
