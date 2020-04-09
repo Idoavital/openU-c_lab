@@ -29,7 +29,8 @@ enum CMD {
 	MULT_COMP_IMG,
 	MULT_COMP_COMP,
 	ABS_COMP,
-	STOP
+	STOP,
+	NOT_CMD
 };
 
 
@@ -39,6 +40,18 @@ enum CMD {
 
 static void printErr(int err);
 
+static int checkIsOp(char * str)
+{
+	if (*str <= 'G' && *str>='A')
+		return true;
+
+	return false;
+}
+
+static checkIsNum(char *)
+{
+	
+}
 static int findComma(char * str)
 {
 	while (*str != ' ' || *str != '\t')
@@ -53,15 +66,35 @@ static int findComma(char * str)
 
 static int checkCmd(char *str)
 {
-	strcmp("read_comp",str);
-	strcmp("print_comp",str);
-	strcmp("add_comp",str);
-	strcmp("sub_comp",str);
-	strcmp("mult_comp_real",str);
-	strcmp("mult_comp_img",str);
-	strcmp("mult_comp_comp",str);
-	strcmp("abs_comp",str);
-	strcmp("stop",str);
+	
+	if(0 == strcmp("read_comp",str))
+		return READ_COMP;
+
+	else if (0 == strcmp("print_comp",str))
+		return PRINT_COMP;
+
+	else if (0 == strcmp("add_comp",str))
+		return ADD_COMP;
+
+	else if (0 == strcmp("sub_comp",str))
+		return SUB_COMP;
+
+	else if (0 == strcmp("mult_comp_real",str))
+		return MULT_COMP_REAL;
+
+	else if (0 == strcmp("mult_comp_img",str))
+		return MULT_COMP_IMG;
+
+	else if (0 == strcmp("mult_comp_comp",str))
+		return MULT_COMP_COMP;
+
+	else if (0 == strcmp("abs_comp",str))
+		return ABS_COMP;
+
+	else if (0 == strcmp("stop",str))
+		return STOP;
+
+	return NOT_CMD;
 
 }
 

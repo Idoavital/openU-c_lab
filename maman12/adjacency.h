@@ -5,7 +5,7 @@
 /*****************************************************/
 /**************** DEFINES ****************************/
 
-#define N 		4 		/* The tree matrix size N*N */
+#define N 		11 		/* The tree matrix size N*N */
 #define TRUE 	1
 #define FALSE 	0
 
