@@ -1,15 +1,13 @@
 
-
 #include "adjacency.h"
 
-/*******************************************************/
 
 /*******************************************************/
-static int RecPath(adjmat pAdjmat,int u, int v ,int start)
+int path(adjmat pAdjmat,int u, int v)
 {
 	int index = 0;
-	/* If cycle path*/
-	if (u == start)
+
+	if (u >= N || v >= N)
 		return FALSE;
 
 	for(index = 0 ; index < N ; index++)
@@ -21,26 +19,11 @@ static int RecPath(adjmat pAdjmat,int u, int v ,int start)
 		/*if there is a continue to the path */
 		else if (pAdjmat[u][index]== TRUE)
 		{
-			if (RecPath(pAdjmat, index, v ,start) == TRUE)
+			if (path(pAdjmat, index, v) == TRUE)
 				return TRUE;
 		}
 	}
 
 	/*if reach to end of the path*/
 	return FALSE;
-
-}
-/*******************************************************/
-
-/*******************************************************/
-int path(adjmat pAdjmat,int u, int v)
-{
-	if (u == v)
-		return TRUE;
-
-	if (u >= N || v >= N)
-		return FALSE;
-
-	return RecPath( pAdjmat, u,  v ,u);
-
 }

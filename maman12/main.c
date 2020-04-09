@@ -22,7 +22,22 @@ static void SetAdjmatTree(adjmat pAdjMat)
 	/* flush the input buffer */
 	while(getchar()!='\n');
 }
+/*************************************************************/
+/*************************************************************/
+static void printMat(adjmat pAdjMat)
+{
+	int indexRow = 0;
+	int indexCol = 0;
 
+	printf("\nYour matrix:\n");
+
+	for (indexRow = 0 ; indexRow < N ; indexRow++)
+	{
+		for (indexCol = 0 ; indexCol < N ; indexCol++)
+			printf("%d  ",pAdjMat[indexRow][indexCol]);
+		printf("\n");
+	}
+}
 /*************************************************************/
 /*************************************************************/
 
@@ -42,6 +57,7 @@ int main(int argc, char const *argv[])
 
 	/* Read the adjmat from the user */
 	SetAdjmatTree(AdjMat);
+	printMat(AdjMat);
 
 	/*Instructions to input junctions*/
 	printf("\n\nInput two indexes (with a space between) of the path you want to check in the tree,\n \
