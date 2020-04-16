@@ -2,24 +2,36 @@
 #include <string.h>
 #include <errno.h> 
 #include <ctype.h> /* isspace */
-#include <stdlib.h> /* strtof */
+#include <stdlib.h> /* strtod */
 
 
 #include "complex.h"
 
 /*****************************************************/
+					/* define */
 /*****************************************************/
 
 #define MAX_LEN 256
 #define	true	1
 #define false	0
+#define FOREVER for(;;)
 #define __IN		/* varaible get in to function */
 #define	__OUT		/* varaible returend from the function */
+#define COMP_VAR_NUM  6
+#define COMP_FUNC_NUM 9
 
 /*****************************************************/
+				/*typedef definition*/
 /*****************************************************/
 
-enum ERROR {
+typedef enum _OK {
+	OK,
+	FAIL,
+	IS_COMMA,
+	IS_NEWLINE
+}_OK;
+
+typedef enum _ERROR {
 	ERR_UNDEF_COMP,
 	ERR_UNDEF_CMD,
 	ERR_INVALID_PARAM,
@@ -30,54 +42,158 @@ enum ERROR {
 	ERR_ILLEGAL_COMMA,
 	ERR_UNDEF_ERROR
 
-};
+}ERROR;
 
-enum CMD {
-	READ_COMP,
-	PRINT_COMP,
-	ADD_COMP,
-	SUB_COMP,
-	MULT_COMP_REAL,
-	MULT_COMP_IMG,
-	MULT_COMP_COMP,
-	ABS_COMP,
-	STOP,
-	NOT_CMD
-};
+typedef enum _CMD {
+	CMD_READ_COMP,
+	CMD_PRINT_COMP,
+	CMD_ADD_COMP,
+	CMD_SUB_COMP,
+	CMD_MULT_COMP_REAL,
+	CMD_MULT_COMP_IMG,
+	CMD_MULT_COMP_COMP,
+	CMD_ABS_COMP,
+	CMD_STOP,
+	CMD_ERR,
+}CMD;
+
+typedef enum _STATE{
+	STATE_READ_CMD,
+	STATE_PARSE_CMD,
+	STATE_DO_CMD,
+	STATE_STOP
+}STATE;
+
+typedef struct _InputParam{
+	int		chFirst;       /*the first operand char*/
+	int 	chSecond;
+	float	fNumFirst;		/*the firat float number*/
+	float	fNumSecond;
+}stInputParam;
+
+typedef struct _stDataP
+{
+	comp_func*		P_func_table
+	complex** 		p_comp_global;
+	complex** 		p_comp_temp;
+	stInputParam**	p_input_param;
+	char*			str_cmd;
+	int				function_num;
+
+}stDataP;
+
+typedef void (*comp_func)(void *); /*type of wrapper functions pointer (to wrapp the command functions)*/
+
+/*****************************************************/
+				/*global variable*/
+/*****************************************************/
+complex A,B,C,D,E,F;
+STATE state;
 
 
 /*****************************************************/
+				/*wrapper fonctions*/
 /*****************************************************/
-/*forward declaration*/
+/*All the wrapper functoin get array of complex numbers*/
 
+void wrapper_read_comp (void * args)
+{
+	complex **pComp = (complex**) args;
+
+	read_comp(pComp[0],pComp[1]->real, pComp[1]->img);
+}
+
+void wrapper_print_comp (void * args)
+{
+	complex **pComp = (complex**) args;
+
+	print_comp(*pComp[0]);
+}
+
+void wrapper_add_comp (void * args)
+{
+	complex **pComp = (complex**) args;
+
+	add_comp(*pComp[0],*pComp[1]);
+}
+
+void wrapper_sub_comp (void * args)
+{
+	complex **pComp = (complex**) args;
+
+	sub_comp(*pComp[0],*pComp[1]);
+}
+
+void wrapper_mult_comp_real (void * args)
+{
+	complex **pComp = (complex**) args;
+
+	mult_comp_real(*pComp[0],pComp[1]->real);
+}
+
+void wrapper_mult_comp_img (void * args)
+{
+	complex **pComp = (complex**) args;
+
+	/*the real value is actually refer to the first input param (in this case is img)*/
+	mult_comp_real(*pComp[0],pComp[1]->real); 
+}
+
+void wrapper_mult_comp_comp (void * args)
+{
+	complex **pComp = (complex**) args;
+
+	mult_comp_comp(*pComp[0],*pComp[1]);
+}
+
+void wrapper_abs_comp (void * args)
+{
+	complex **pComp = (complex**) args;
+
+	abs_comp(*pComp[0]);
+}
+
+void f_stop (void * args)
+{
+	/*TODO: EXIT CLEAN*/
+}
+
+
+/*****************************************************/
+				/* forward declaration */
+				/* static functions    */
+/*****************************************************/
+
+/**
+ * @the function print error to stdout
+ * @param err the error number
+ */
 static void printErr(int err);
 
 /**
- * @The function check if the string start with a operand 'A' -'G',
- * @param strIn pointer to the start of string.
- * @param pEnd  return pointer to first char after the operand.
- * @return 		true if the function succeeded to converet the string to float, else return false .
+ * @The function check if the string start with a operand 'A' -'F',
+ * @param strIn Double pointer to the start of string.
+ * @param first true if the oprand should be the first oprand in the command.
+ * @return 		OK if the string is find operand 'A' -'F',
 */
-static int checkIsOp(char * str , char ** pEnd);
+static int checkIsOp(char **strIn, int first );
 
 /**
  * @The function check if the string start with a number,
  * 	and convert the string number to float.
- * @param strIn pointer to the start of string.
- * @param pEnd  return pointer to first char after the number.
+ * @param strIn Double pointer to the start of string.
  * @param fNum  return float pointer that containing the converted number
- * @return 		true if the function succeeded to converet the string to float, else return false .
+ * @return 		OK if the function succeeded to converet the string to float, else return the char error, 
 */
-static int checkIsNum(__IN char * strIn , __OUT char ** pEnd ,__OUT float *fNum);
+static int checkIsNum(__IN char **strIn ,__OUT float *fNum);
 
 
 /**
  * @The function check if the string start with a comma char(',').
- * @param strIn pointer to the start of string.
- * @param pEnd  return pointer to first char after the comma char.
+ * @param strIn Double pointer to the start of string.
  * @return 		true if the function succeeded to converet the string to float, else return false .
 */
-static int checkIsComma(__IN char * strIn , __OUT char ** pEnd );
+static int checkIsComma(__IN char **strIn );
 
 
 /**
@@ -95,62 +211,249 @@ static int checkCmd(__IN char * strIn , __OUT char ** pEnd);
  */
 static int checkIsEndOfString(__IN char *strIn);
 
-
-static void twoOpOneNum(char *str)
+/**
+ *@The function set a functions table.
+ *
+ *@param cf pointer to array of functoins to be set.
+ */
+static void setFuncTable(comp_func * cf)
 {
-	float f;
-	int ret =0;
-	ret += checkIsOp(str,&str );
-	ret += checkIsComma(str,&str);
-	ret += checkIsNum(str,&str,&f);
-	ret += checkIsComma(str,&str);
-	ret += checkIsNum(str,&str,&f);
-	ret += checkIsEndOfString(str);
+	cf[READ_COMP] 		= wrapper_read_comp;
+	cf[PRINT_COMP] 		= wrapper_print_comp;
+	cf[ADD_COMP] 		= wrapper_abs_comp;
+	cf[SUB_COMP] 		= wrapper_sub_comp;
+	cf[MULT_COMP_REAL] 	= wrapper_mult_comp_real;
+	cf[MULT_COMP_IMG] 	= wrapper_mult_comp_img;
+	cf[MULT_COMP_COMP] 	= wrapper_mult_comp_comp;
+	cf[ABS_COMP] 		= wrapper_abs_comp;
+	cf[STOP] 			= f_stop;
+
+}
+
+static void setArrComplex(complex* pComp[COMP_VAR_NUM])
+{
+	pComp[0] = &A;
+	pComp[1] = &B;
+	pComp[2] = &C;
+	pComp[3] = &D;
+	pComp[4] = &E;
+	pComp[5] = &F;
+}
+/******************************************************************/
+				/* read param functions */
+/******************************************************************/
+/**
+ * @the function check if the string is from the format "cmd operand , number , number "
+*/
+static void readOneOpTwoNum(__IN char *str ,__OUT stInputParam* inParam) 
+{
+
+	/* check and read if is oprand else print error*/
+	if (checkIsOp(&str,true ) == OK)
+	{
+		inParam->chFirst = *str-'A';
+		str++;
+	}
+	else 
+		return;
+	
+	/* check  Is Comma else print error */
+	if (checkIsComma(&str) == FAIL)
+		return;
+
+	/* check and read Is float number else print error */
+	if (checkIsNum(&str,&inParam->fNumFirst) == FAIL)
+		return;
+	
+	/* check  Is Comma else print error */
+	if (checkIsComma(&str) == FAIL)
+		return;
+
+
+	/* check and read Is float number else print error */
+	if (checkIsNum(&str,&inParam->fNumSecond) == FAIL)
+		return;
+
+	if (checkIsEndOfString(str)  == OK)
+	{
+		state = STATE_DO_CMD;
+	}
+	else 
+		return;
+
+}
+
+/**
+ * @the function check if the string is from the format "cmd operand , operand "
+*/
+static void readTWoOp(__IN char *str ,__OUT stInputParam* inParam)
+{
+	/* check and read if is oprand else print error*/
+	if (checkIsOp(&str,true ) == OK)
+	{
+		inParam->chFirst = *str-'A';
+		str++;
+	}
+	else 
+		return;
+	
+		/* check  Is Comma else print error */
+	if (checkIsComma(&str) == FAIL)
+		return;
+
+		/* check and read if is oprand else print error*/
+	if (checkIsOp(&str,false ) == OK)
+	{
+		inParam->chSecond = *str-'A';
+		str++;
+	}
+	else 
+		return;
+
+	if (checkIsEndOfString(str)  == OK)
+	{
+		state = STATE_DO_CMD;
+	}
+	else 
+		return;
+
+}
+
+/**
+ * @the function check if the string is from the format "cmd operand "
+*/
+static void readOneOp(__IN char *str ,__OUT stInputParam* inParam) 
+{
+	/* check and read if is oprand else print error*/
+	if (checkIsOp(&str,true ) == OK)
+	{
+		inParam->chSecond = *str-'A';
+		str++;
+	}
+	else 
+		return;
+
+	if (checkIsEndOfString(str)  == OK)
+	{
+		state = STATE_DO_CMD;
+	}
+	else 
+		return;
+}
+
+/**
+ * @the function check if the string is from the format "cmd operand , number "
+*/
+static void readOneOpOneNum(__IN char *str ,__OUT stInputParam* inParam) 
+{
+		/* check and read if is oprand else print error*/
+	if (checkIsOp(&str,true ) == OK)
+	{
+		inParam->chSecond = *str-'A';
+		str++;
+	}
+	else 
+		return;
+	
+	/* check  Is Comma else print error */
+	if (checkIsComma(&str) == FAIL)
+		return;
+
+	/* check and read Is float number else print error */
+	if (checkIsNum(&str,&inParam->fNumFirst) == FAIL)
+		return;
+	
+	if (checkIsEndOfString(str)  == OK)
+	{
+		state = STATE_DO_CMD;
+	}
+	else 
+		return;
+
+}
+
+static void stateReadCmd(stDataP* pData)
+{
+	/*ask from the user to input command*/
+	printf("\nPlease enter command: ");
+
+	fgets(pData->str_cmd,MAX_LEN,stdin);
+
+	/*decide what is the next step after read the command*/
+	if ((pData->function_num = checkCmd(cmd , &pend)) == CMD_ERR) 
+		state = STATE_READ_CMD;
+	else
+		state = STATE_PARSE_CMD;
+
+}
+
+static void stateParseCmd(stDataP* pData)
+{
+	/*TODO: SET VARIABLES*/
+	int funcNum    		= pData->function_num;
+	comp_func func 		= pData->P_func_table[funcNum];
+	stInputParam* params = pData->p_input_param;
+
+	func(params);
 
 }
 /*****************************************************/
+				/* MAIN */
 /*****************************************************/
 
 int main(int argc, char const *argv[])
 {
-	char cmd[MAX_LEN] ;
-/*	char Token_1[MAX_LEN];
-	char Token_2[MAX_LEN];
-	char Token_3[MAX_LEN];
-*/
-	char *pend;
-	float f;
-	complex a;
 
-	errno = 0;
+	complex*	  arrCompVar[COMP_VAR_NUM]; 
+	complex*      arrtempcomp[2];
+	stInputParam  inParam;				/* the variable from stdin */
+	comp_func 	  arrCompFunc[COMP_FUNC_NUM];
+	char 		  cmd[MAX_LEN];
+	char*		  pend;
+	int 		  funcNum;
 
-	f = strtod(cmd,&pend);
+	/*TODO: set stData*/
+	/*set the complex array to variable*/
+	setArrComplex(arrCompVar);
+
+	/*set the function table */
+	setFuncTable(arrCompFunc);
+
+
+	readOneOpTwoNum(pend, &inParam) ;
+
+	/*set params*/
+	arrtempcomp[0] = arrCompVar[inParam.chFirst];
+	arrtempcomp[1] = (complex*)&inParam.fNumFirst;
+
+
+	arrCompFunc[funcNum]((void*)arrtempcomp);
+	
+
+
+FOREVER
+{
+	fgets(cmd,MAX_LEN,stdin);
+	checkCmd(cmd , &pend);
+	readOneOpTwoNum(pend, &inParam) ;
 
 	fgets(cmd,MAX_LEN,stdin);
 	checkCmd(cmd , &pend);
-	twoOpOneNum(pend);
+	readTWoOp(pend ,&inParam) ;
 
-	while(1)
-	{	
-		scanf("%s",cmd);
-		if( checkIsNum(cmd, &pend, &f) == false)
-			printErr(ERR_INVALID_PARAM);
-	}
-	
-	
-	readCmd();
+	fgets(cmd,MAX_LEN,stdin);
+	checkCmd(cmd , &pend);
+	readOneOp(pend ,&inParam) ;
 
-	a.img = 34.2333;
-	a.real = 22.22222;
+}
 
-	print_comp(a);
 
-	printErr(ERR_UNDEF_COMP);
 	return 0;
 }
 
 
 /*****************************************************/
+			/*static functions definitions*/
 /*****************************************************/
 
 static void printErr(int err)
@@ -188,7 +491,7 @@ static void printErr(int err)
 		break;
 
 	case ERR_ILLEGAL_COMMA:
-		printf("Missing comma\n");
+		printf("Illegal comma\n");
 		break;
 
 
@@ -197,75 +500,117 @@ static void printErr(int err)
 		break;
 	}
 	
-	printf(RESET);
+	printf(RESET"\n");
 }
 
 
 /**
- * @The function check if the string start with a operand 'A' -'G',
- * @param strIn pointer to the start of string.
- * @param pEnd  return pointer to first char after the operand.
- * @return 		true if the function succeeded to converet the string to float, else return false .
+ * @The function check if the string start with a operand 'A' -'F',
+ * @param strIn Double pointer to the start of string.
+ * @param first true if the oprand should be the first oprand in the command.
+ * @return 		OK if the string is find operand 'A' -'F',
 */
-static int checkIsOp(char * str , char ** pEnd)
+static int checkIsOp(char **strIn, int first )
 {
 	/* remove white space */
-	while (*str =='\t' || *str ==' ')
-		str++;
+	while (**strIn =='\t' || **strIn ==' ')
+		(*strIn)++;
 	
-	if (*str <= 'G' && *str>='A')
-		{
-			 /* if(str[1] == ' ' || str[1] == '\t' || str[1] == ',') */
-			{
-				*pEnd = (str+1);
-				return true;
-			}
-				
-		}
+	if (**strIn <= 'F' && **strIn>='A')
+		return OK;
 
-	return false;
+	else if (**strIn == ',' && first)
+	{
+		printErr(ERR_ILLEGAL_COMMA);
+		return FAIL;
+	}
+
+	else if (**strIn == ',')
+	{
+		printErr(ERR_MULTI_COMMA);
+		return FAIL;
+	}
+
+	else if (**strIn == '\n')
+	{
+		printErr(ERR_MIS_PARAM);
+		return FAIL;
+	}
+
+	printErr(ERR_UNDEF_COMP);
+
+	return FAIL;
 }
 
 /**
  * @The function check if the string start with a number,
  * 	and convert the string number to float.
- * @param strIn pointer to the start of string.
- * @param pEnd  return pointer to first char after the number.
+ * @param strIn Double pointer to the start of string.
  * @param fNum  return float pointer that containing the converted number
- * @return 		true if the function succeeded to converet the string to float, else return false .
+ * @return 		OK if the function succeeded to converet the string to float, else return the char error, 
 */
-static int checkIsNum(__IN char * strIn , __OUT char ** pEnd ,__OUT float *fNum)
+static int checkIsNum(__IN char **strIn ,__OUT float *fNum)
 {
+	char * pEnd = NULL;
 	
+	/* remove white space */
+	while (**strIn =='\t' || **strIn ==' ')
+		(*strIn)++;
+	
+	if (**strIn ==',')
+	{		
+		printErr(ERR_MULTI_COMMA);
+		return FAIL;
+	}
 
+	if (**strIn =='\n')
+	{
+		printErr(ERR_MIS_PARAM);
+		return FAIL;
+	}
 	/* convert string to float */
-	*fNum = strtod(strIn,pEnd);
+	*fNum = strtod(*strIn ,&pEnd);
 
 	/*check failure strtod*/
-	if(*fNum == 0 && **pEnd == *strIn)
-		return false;
+	if(*fNum == 0 && *pEnd == **strIn)
+	{
+		printErr(ERR_INVALID_PARAM);
+		return FAIL;
+	}
 
-	return true;
+	*strIn = pEnd;
+
+	return OK;
 }
 
 /**
  * @The function check if the string start with a comma char(',').
- * @param strIn pointer to the start of string.
- * @param pEnd  return pointer to first char after the comma char.
- * @return 		true if the function succeeded to converet the string to float, else return false .
+ * @param strIn Double pointer to the start of string.
+ * @return 		OK if the char is a comma.
 */
-static int checkIsComma(__IN char * strIn , __OUT char ** pEnd )
+static int checkIsComma(__IN char **strIn )
 {
-	*pEnd =  strIn;
-	for (;**pEnd != ','; (*pEnd)++)
+
+	/* remove white space */
+	while (**strIn =='\t' || **strIn ==' ')
+		(*strIn)++;
+
+
+	if (**strIn == '\n')
 	{
-		if(**pEnd != ' ' && **pEnd != '\t')
-			return false;
-	
+		printErr(ERR_MIS_PARAM);
+		return FAIL;			
 	}
 
-	(*pEnd)++;
-	return true;	
+	if (**strIn != ',')
+	{
+		printErr(ERR_MIS_COMMA);
+		return FAIL;
+	}
+
+	(*strIn)++;
+
+	return OK;	
 }
 
 
@@ -275,7 +620,7 @@ static int checkIsComma(__IN char * strIn , __OUT char ** pEnd )
  * @param pEnd  return pointer to first char after the command.
  * @return 		the int number of the command value
 */
-static int checkCmd(__IN char * strIn , __OUT char ** pEnd)
+static int checkCmd(__IN char *strIn , __OUT char ** pEnd)
 {
 
 	char* str = NULL;
@@ -292,33 +637,33 @@ static int checkCmd(__IN char * strIn , __OUT char ** pEnd)
 	(*pEnd)++; /*start of the next token after '\0'*/
 
 	if(0 == strcmp("read_comp",str))
-		return READ_COMP;
+		return CMD_READ_COMP;
 
 	else if (0 == strcmp("print_comp",str))
-		return PRINT_COMP;
+		return CMD_PRINT_COMP;
 
 	else if (0 == strcmp("add_comp",str))
-		return ADD_COMP;
+		return CMD_ADD_COMP;
 
 	else if (0 == strcmp("sub_comp",str))
-		return SUB_COMP;
+		return CMD_SUB_COMP;
 
 	else if (0 == strcmp("mult_comp_real",str))
-		return MULT_COMP_REAL;
+		return CMD_MULT_COMP_REAL;
 
 	else if (0 == strcmp("mult_comp_img",str))
-		return MULT_COMP_IMG;
+		return CMD_MULT_COMP_IMG;
 
 	else if (0 == strcmp("mult_comp_comp",str))
-		return MULT_COMP_COMP;
+		return CMD_MULT_COMP_COMP;
 
 	else if (0 == strcmp("abs_comp",str))
-		return ABS_COMP;
+		return CMD_ABS_COMP;
 
 	else if (0 == strcmp("stop",str))
-		return STOP;
+		return CMD_STOP;
 
-	return NOT_CMD;
+	return CMD_ERR;
 
 }
 
@@ -329,12 +674,14 @@ static int checkCmd(__IN char * strIn , __OUT char ** pEnd)
  */
 static int checkIsEndOfString(__IN char *strIn)
 {
-	char * pEnd =  strIn;
-	while (*pEnd++ != '\n')
-	{
-		if(!isspace(pEnd))
-			return false;
-	}
+	/* remove white space */
+	while (*strIn =='\t' || *strIn ==' ')
+		strIn++;
 
-	return true;	
+	if (*strIn == '\n' || *strIn == '\n')
+		return OK;	
+
+	printErr(ERR_EXTRA_TXT);
+
+	return FAIL;
 }
