@@ -6,8 +6,8 @@ CFALG   = -g -Wall -ansi -pedantic -std=c90
 LDFLAG  = -lm
 INCLUDE = -I.
 
-DEPS    = complex.h
-OBJ     = mycomp.o complex.o 
+DEPS    = compHelper.h complex.h 
+OBJ     = mycomp.o compHelper.o complex.o 
 
 
 #################################################
