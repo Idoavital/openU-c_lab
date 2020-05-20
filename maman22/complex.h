@@ -14,11 +14,22 @@ typedef struct Complex
 
 /*************************************************************/
 /**************************************************************/
+#define COLOR
+#ifdef COLOR
 
 #define YELLOW "\033[0;33m"		/*Yellow color*/
 #define GREEN  "\033[0;32m"		/*Green color*/
 #define RED    "\033[0;31m"		/*Red color*/
 #define RESET  "\033[0;0m"		/*Reset to defualt color*/
+
+#else
+
+#define YELLOW " "		/*Yellow color*/
+#define GREEN  " "		/*Green color*/
+#define RED    " "		/*Red color*/
+#define RESET  " "		/*Reset to defualt color*/
+
+#endif
 
 /**************************************************************/
 /**************************************************************/

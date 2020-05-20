@@ -73,7 +73,8 @@ void wrapper_abs_comp (void * args)
 
 void f_stop (void * args)
 {
-	printf("GoodBey !!!\n");
+	printf("You choose to finish the app\n");
+	printf(GREEN"GoodBye !!!\n"RESET);
 	exit(0);
 }
 
@@ -252,7 +253,7 @@ void f_stop (void * args)
 
 	char* str = NULL;
 
-	str = strtok(strIn," \t\n");
+	str = strtok(strIn," \r\t\n");
 
 	if (str == NULL)
 		return CMD_ERR;
@@ -339,7 +340,7 @@ void f_stop (void * args)
 	while (*strIn =='\t' || *strIn ==' ')
 		strIn++;
 
-	if (*strIn == '\n' || *strIn == '\0')
+	if (*strIn == '\n' || *strIn == '\0' || *strIn == '\r')
 		return OK;	
 
 	printErr(ERR_EXTRA_TXT);
@@ -362,7 +363,7 @@ void stateReadCmd(stData* pData)
 	printf("\nPlease enter command: \n");
 	if(fgets(pData->str_cmd,MAX_LEN,stdin)==NULL)
 	{
-		printf(RED"ERROR END OF FILE !!!\n"RESET);
+		printf(RED"[ERROR] END OF FILE !!!\nPlease exit with stop command\n"RESET);
 		exit(1);
 	}
 	printf(YELLOW"You Enter: ");
@@ -436,7 +437,7 @@ void stateParseCmd(stData* pData)
 		break;
 	}
 
-	cf[funcNum](arrComp);
+	cf[funcNum](arrComp); /*exeute cmd*/
 
 	state = STATE_READ_CMD;
 
