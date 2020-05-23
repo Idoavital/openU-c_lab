@@ -1,12 +1,47 @@
+/********************************************************************************************************	
+* mycomp : Program to calculate arithmtic opartion on complex number												*	
+*                                                     													*	
+* Author:  Ido Abitbul			                      													*
+*                                                     													*
+* Usage :											  													*																					
+*		there is 6 complex number named only A,B,C,D,E,F 												*														
+*	the commands format are:																			*
+*	read_comp COMPLEX VARIABLE NAME, NUMBER, NUMBER   		example: read_comp A, 6.55, -45.5			*
+*	print_comp COMPLEX VARIABLE NAME						example: print_comp D						*
+*	add_comp COMPLEX VARIABLE NAME, COMPLEX VARIABLE NAME	example: add_comp B,F						*
+*	sub_comp COMPLEX VARIABLE NAME, COMPLEX VARIABLE NAME	example: sub_comp B,F						*
+*	mult_comp_real VARIABLE NAME, NUMBER					example: mult_comp_real A, 6.55				*
+*	mult_comp_img VARIABLE NAME, NUMBER						example: mult_comp_img A, 6.55				*
+*	mult_comp_comp COMPLEX VARIABLE NAME, COMPLEX VARIABLE NAME example: mult_comp_comp A, B			*
+*	abs_comp COMPLEX VARIABLE NAME							example: abs_comp D							*
+*	stop																								*
+*																										*
+*	the command shuold be exactly in the concurrent format, any outher format will lead to mistake.		*
+*																										*
+* The algorithm:																						*
+*		the program work in state machine in infinty loop												*
+*		there is 4 state: 																				*
+*			STATE_READ_CMD:  in this state we read the user command.									*
+*			STATE_PARSE_CMD: in this state we analaze the user input string (command).					*
+*			STATE_DO_CMD:	 in this state we execute the command .										*
+*			STATE_STOP:		 in this state we stop the program.											*
+*																										*
+*		the base state is STATE_READ_CMD, if the state finsh o.k we pass to next state else				*
+*		we return to STATE_READ_CMD.																	*
+*																										*
+*																										*
+*********************************************************************************************************/																												
+
+
 #include <stdio.h>
 #include <string.h>
 #include <errno.h> 
 #include <ctype.h> /* isspace */
 #include <stdlib.h> /* strtod */
 
-
 #include "complex.h"
 #include "compHelper.h"
+
 
 /*****************************************************/
 				/*global variable*/
@@ -57,7 +92,7 @@ int main(int argc, char const *argv[])
 	stData.str_cmd		 = cmd;
 
 
-	while (state != STATE_STOP)
+	FOREVER
 	{
 		arrStateFunc[state](&stData);
 	}
@@ -69,7 +104,7 @@ int main(int argc, char const *argv[])
 				/* read param functions */
 /******************************************************************/
 /**
- * @the function check if the string is from the format "cmd operand , number , number "
+ * @the function check if the string is from the format "complex variable , number , number "
 */
 int readOneCompTwoNum(__IN char *str ,__OUT stInputParam* inParam) 
 {
@@ -108,7 +143,7 @@ int readOneCompTwoNum(__IN char *str ,__OUT stInputParam* inParam)
 }
 
 /**
- * @the function check if the string is from the format "cmd operand , operand "
+ * @the function check if the string is from the format "complex variable , operand "
 */
 int readTWoComp(__IN char *str ,__OUT stInputParam* inParam)
 {
@@ -142,7 +177,7 @@ return true;
 }
 
 /**
- * @the function check if the string is from the format "cmd operand "
+ * @the function check if the string is from the format "complex variable "
 */
 int readOneComp(__IN char *str ,__OUT stInputParam* inParam) 
 {
@@ -162,7 +197,7 @@ int readOneComp(__IN char *str ,__OUT stInputParam* inParam)
 }
 
 /**
- * @the function check if the string is from the format "cmd operand , number "
+ * @the function check if the string is from the format "complex variable , number "
 */
 int readOneCompOneNum(__IN char *str ,__OUT stInputParam* inParam) 
 {
